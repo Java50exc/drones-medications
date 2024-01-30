@@ -43,7 +43,7 @@ class DronesControllerTest {
 	static final String URL_DRONE_REGISTER = HOST + UrlConstants.DRONES;
 	private static final String URL_DRONE_LOAD = HOST + UrlConstants.LOAD_DRONE;
 	DroneDto droneDto1 = new DroneDto(DRONE_NUMBER_1, ModelType.Cruiserweight);
-	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(new String(new char[1000]), "KUKU");
+	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(DRONE_NUMBER_1, "KUKU");
 	DroneDto droneDtoMissingFields = new DroneDto(null, null);
 	DroneMedication droneMedication = new DroneMedication(DRONE_NUMBER_1, MEDICATION_CODE);
 	DroneMedication droneMedicationWrongFields = new DroneMedication(new String(new char[1000]), "mED_1");
