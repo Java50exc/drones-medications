@@ -1,6 +1,7 @@
 delete from drones;
 delete from medications;
 delete from drone_models;
+delete from event_logs;
 insert into drone_models (model_name, weight) values
 ('Lightweight', 100),
 ('Middleweight', 300),

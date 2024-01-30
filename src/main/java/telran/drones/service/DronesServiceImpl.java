@@ -30,8 +30,7 @@ public class DronesServiceImpl implements DronesService {
 	final DronesModelRepo droneModelRepo;
 	@Value("${" + PropertiesNames.CAPACITY_THRESHOLD + ":25}")
 	int capacityThreshold;
-	@Value("${" + PropertiesNames.CAPACITY_DELTA_TIME_UNIT + ":2}")
-	private int capacityDeltaPerTimeUnit;
+	
 
 	@Override
 	@Transactional
@@ -41,10 +40,11 @@ public class DronesServiceImpl implements DronesService {
 			throw new DroneAlreadyExistException();
 		}
 		Drone drone = Drone.of(droneDto);
-		log.debug("drone object is {}", drone);
+		
 		DroneModel droneModel = droneModelRepo.findById(droneDto.modelType())
 				.orElseThrow(() -> new ModelNotFoundException());
 		drone.setModel(droneModel);
+		log.debug("drone object is {}", drone);
 		droneRepo.save(drone);
 		return droneDto;
 	}

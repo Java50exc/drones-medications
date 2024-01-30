@@ -8,6 +8,7 @@ import telran.drones.dto.State;
 @NoArgsConstructor
 @AllArgsConstructor(access=AccessLevel.PRIVATE)
 @Getter
+@ToString
 public class Drone {
 	@Id
 	@Column(length = 100, name="drone_number")
