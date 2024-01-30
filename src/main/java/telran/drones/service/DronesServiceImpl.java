@@ -83,4 +83,28 @@ public class DronesServiceImpl implements DronesService {
 		return droneMedication;
 	}
 
+	@Override
+	public List<String> checkMedicationItems(String droneNumber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<String> checkAvailableDrones() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int checkBatteryCapacity(String droneNumber) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public DroneItemsAmount checkDroneLoadedItemAmounts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }
