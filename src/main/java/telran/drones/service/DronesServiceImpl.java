@@ -17,12 +17,15 @@ import telran.drones.dto.*;
 import telran.drones.exceptions.*;
 
 import telran.drones.model.*;
+import telran.drones.projections.DroneNumber;
+import telran.drones.projections.MedicationCode;
 import telran.drones.repo.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @EnableScheduling
+@Transactional(readOnly=true)
 public class DronesServiceImpl implements DronesService {
 	final DronesRepo droneRepo;
 	final MedicationRepo medicationRepo;
@@ -33,7 +36,7 @@ public class DronesServiceImpl implements DronesService {
 	
 
 	@Override
-	@Transactional
+	@Transactional(readOnly = false)
 	public DroneDto registerDrone(DroneDto droneDto) {
 		log.debug("service got drone DTO: {}", droneDto);
 		if (droneRepo.existsById(droneDto.number())) {
@@ -73,7 +76,6 @@ public class DronesServiceImpl implements DronesService {
 			throw new IllegalMedicationWeightException();
 		}
 		drone.setState(State.LOADING);
-		//EventLog(LocalDateTime timestamp, String droneNumber, State state, int batteryCapacity) 
 		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(),
 				drone.getBatteryCapacity(), medicationCode);
 		logRepo.save(eventLog);
@@ -85,26 +87,39 @@ public class DronesServiceImpl implements DronesService {
 
 	@Override
 	public List<String> checkMedicationItems(String droneNumber) {
-		
-		return null;
+		if(!droneRepo.existsById(droneNumber)) {
+			throw new DroneNotFoundException();
+		}
+		List<MedicationCode> codes =
+				logRepo.findByDroneNumberAndState(droneNumber, State.LOADING);
+		List<String> res =  codes.stream().map(MedicationCode::getMedicationCode).toList();
+		log.debug("Loaded medication items on drone {} are {} ", droneNumber, res);
+		return res;
 	}
 
 	@Override
 	public List<String> checkAvailableDrones() {
-		// TODO Auto-generated method stub
-		return null;
+		List<DroneNumber> numbers = 
+droneRepo.findByStateAndBatteryCapacityGreaterThanEqual(State.IDLE, capacityThreshold);
+		List<String> res = numbers.stream().map(DroneNumber::getNumber).toList();
+		log.debug("Available drones are {}", res);
+		return res;
 	}
 
 	@Override
 	public int checkBatteryCapacity(String droneNumber) {
-		// TODO Auto-generated method stub
-		return 0;
+		Drone drone = droneRepo.findById(droneNumber)
+				.orElseThrow(() -> new DroneNotFoundException());
+		int res = drone.getBatteryCapacity();
+		log.debug("battery capacity of drone {} is {}", droneNumber, res);
+		return res;
 	}
 
 	@Override
 	public List<DroneItemsAmount> checkDroneLoadedItemAmounts() {
-		// TODO Auto-generated method stub
-		return null;
+		List<DroneItemsAmount> res = logRepo.getItemAmounts();
+		res.forEach(dia -> log.trace("drone {}, items amount {}", dia.getNumber(), dia.getAmount()));
+		return res;
 	}
 
 }
