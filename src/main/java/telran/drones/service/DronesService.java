@@ -52,5 +52,5 @@ public interface DronesService {
     *  ordered by the amount in the descending order
     * @return distribution projection
     */
-   DroneItemsAmount checkDroneLoadedItemAmounts();
+   List<DroneItemsAmount> checkDroneLoadedItemAmounts();
 }
