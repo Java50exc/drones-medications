@@ -12,6 +12,7 @@ public class DronesConfiguration {
 @SuppressWarnings("serial")
 @Bean
 Map<State, State> getStatesMachine() {
+	//Matrix of states machine
 	return new HashMap<>() {
 		{
 			put(State.LOADING, State.LOADED);
