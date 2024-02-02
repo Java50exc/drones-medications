@@ -24,7 +24,6 @@ import telran.drones.repo.*;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@EnableScheduling
 @Transactional(readOnly=true)
 public class DronesServiceImpl implements DronesService {
 	final DronesRepo droneRepo;
@@ -108,11 +107,13 @@ droneRepo.findByStateAndBatteryCapacityGreaterThanEqual(State.IDLE, capacityThre
 
 	@Override
 	public int checkBatteryCapacity(String droneNumber) {
-		Drone drone = droneRepo.findById(droneNumber)
-				.orElseThrow(() -> new DroneNotFoundException());
-		int res = drone.getBatteryCapacity();
-		log.debug("battery capacity of drone {} is {}", droneNumber, res);
-		return res;
+		Integer batteryCapacity = droneRepo.findBatteryCapacity(droneNumber);
+		if(batteryCapacity == null)	{
+			throw new DroneNotFoundException();
+		}
+		
+		log.debug("battery capacity of drone {} is {}", droneNumber, batteryCapacity);
+		return batteryCapacity;
 	}
 
 	@Override
