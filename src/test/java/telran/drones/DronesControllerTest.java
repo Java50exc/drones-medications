@@ -8,9 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.engine.spi.Status;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,6 +60,7 @@ class DronesControllerTest {
 	private static final String URL_AVAILABLE_DRONES = HOST + UrlConstants.AVAILABLE_DRONES;
 	private static final String URL_BATTERY_CAPACITY = HOST + UrlConstants.DRONE_BATTERY_CAPACITY + DRONE_NUMBER_1;
 	private static final String URL_ITEMS_AMOUNT = HOST + UrlConstants.DRONES_AMOUNT_ITEMS;
+	private static final String URL_HISTORY_LOGS = HOST + UrlConstants.DRONE_HISTORY_LOGS + DRONE_NUMBER_1;
 	DroneDto droneDto1 = new DroneDto(DRONE_NUMBER_1, ModelType.Cruiserweight);
 	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(DRONE_NUMBER_1, "KUKU");
 	DroneDto droneDtoMissingFields = new DroneDto(null, null);
@@ -222,6 +225,28 @@ class DronesControllerTest {
 		
 		when(dronesService.checkBatteryCapacity(DRONE_NUMBER_1)).thenThrow(new DroneNotFoundException());
 		mockMvc.perform(get(URL_BATTERY_CAPACITY)).andExpect(status().isNotFound());
+		
+		
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_LOGS_NORMAL)
+	void checkHistoryLogsNormal() throws Exception {
+		EventLogDto[] expectedLogs = {
+			new EventLogDto(LocalDateTime.now(), DRONE_NUMBER_1, MEDICATION_CODE,
+					State.LOADING, 100),
+			new EventLogDto(LocalDateTime.now(), DRONE_NUMBER_1, MEDICATION_CODE,
+					State.LOADED, 98),
+		};
+		when(dronesService.checkHistoryLogs(DRONE_NUMBER_1)).thenReturn(List.of(expectedLogs));
+		String response = getMethodWithResponse(URL_HISTORY_LOGS);
+		assertEquals(mapper.writeValueAsString(expectedLogs), response);
+	}
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_LOGS_DRONE_NOT_FOUND)
+	void checkHistoryLogsNotFound()throws Exception {
+		
+		when(dronesService.checkHistoryLogs(DRONE_NUMBER_1)).thenThrow(new DroneNotFoundException());
+		mockMvc.perform(get(URL_HISTORY_LOGS)).andExpect(status().isNotFound());
 		
 		
 	}	

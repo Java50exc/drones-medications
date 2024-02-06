@@ -1,4 +1,5 @@
 package telran.drones;
+import telran.drones.api.PropertiesNames;
 import telran.drones.dto.*;
 import telran.drones.model.*;
 import telran.drones.exceptions.*;
@@ -8,6 +9,7 @@ import telran.drones.service.DronesService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,8 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 
-@SpringBootTest
-@Sql(scripts = "classpath:test_data.sql")
+@SpringBootTest(properties= {PropertiesNames.PERIODIC_UNIT_MILLIS + "=10"})
+@Sql(scripts = "classpath:test_idle.data.sql")
 
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
@@ -42,33 +44,50 @@ class DronesServiceTest {
 			
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
-	void loadDroneNormal() {
+	void loadDroneNormal() throws InterruptedException {
 		dronesService.loadDrone(droneMedication1);
+		Thread.sleep(2000);
 		List<EventLog> logs = logRepo.findAll();
-		assertEquals(1, logs.size());
-		EventLog loadingLog = logs.get(0);
-		String droneNumber = loadingLog.getDroneNumber();
-		State state = loadingLog.getState();
-		String medicationCode = loadingLog.getMedicationCode();
-		assertEquals(DRONE1, droneNumber);
-		assertEquals(State.LOADING, state);
-		assertEquals(MED1, medicationCode);
+		assertEquals(23, logs.size());
+		State[] statesChain = getStatesChail();
+		
+		assertStates(statesChain, logs);
 		Drone drone = droneRepo.findById(DRONE1).orElseThrow();
-		assertEquals(State.LOADING, drone.getState());
+		assertEquals(State.IDLE, drone.getState());
+	}
+	private State[] getStatesChail() {
+		State [] stateValues = State.values();
+		State [] statesChain = Arrays.copyOfRange(stateValues, 1, stateValues.length + 12);
+		for(int i = 0; i < statesChain.length; i++) {
+			if(statesChain[i]==null) {
+				statesChain[i] = State.IDLE;
+			}
+		}
+		return statesChain;
+	}
+	private void assertStates(State[] statesChain, List<EventLog> logs) {
+		final int[] indexValues = {0};
+		logs.forEach(l -> {
+			assertEquals(statesChain[indexValues[0]++], l.getState());
+		});
+		
 	}
 	@Test
+	@Sql(scripts = "classpath:test_data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NOT_MATCHING_STATE)
 	void loadDroneWrongState() {
 		assertThrowsExactly(IllegalDroneStateException.class,
 				() -> dronesService.loadDrone(new DroneMedication(DRONE3, MED1)));
 	}
 	@Test
+	@Sql(scripts = "classpath:test_data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_MEDICATION_NOT_FOUND)
 	void loadDroneMedicationNotFound() {
 		assertThrowsExactly(MedicationNotFoundException.class,
 				() -> dronesService.loadDrone(new DroneMedication(DRONE1, "KUKU")));
 	}
 	@Test
+	@Sql(scripts = "classpath:test_data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NOT_FOUND)
 	void loadDroneNotFound() {
 		assertThrowsExactly(DroneNotFoundException.class,
@@ -103,6 +122,7 @@ class DronesServiceTest {
 				()->dronesService.checkMedicationItems(DRONE4));
 	}
 	@Test
+	@Sql(scripts = "classpath:test_data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.AVAILABLE_DRONES)
 	void checkAvailableDrones() {
 		List<String> availableExpected = List.of(DRONE1);
@@ -114,7 +134,7 @@ class DronesServiceTest {
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_NORMAL)
 	void checkBatteryCapacityNormal() {
-		assertEquals(100, dronesService.checkBatteryCapacity(DRONE1));
+		assertEquals(100, dronesService.checkBatteryCapacity(DRONE2));
 	}
 	@Test
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_DRONE_NOT_FOUND)
@@ -123,7 +143,6 @@ class DronesServiceTest {
 				()->dronesService.checkBatteryCapacity(DRONE4));
 	}
 	@Test
-	@Sql(scripts = "classpath:test_idle.data.sql")
 	@DisplayName(SERVICE_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
 	void checkDroneLoadedItemAmounts() {
 		dronesService.loadDrone(droneMedication1);
