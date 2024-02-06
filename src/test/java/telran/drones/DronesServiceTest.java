@@ -46,14 +46,16 @@ class DronesServiceTest {
 	@DisplayName(SERVICE_TEST + TestDisplayNames.LOAD_DRONE_NORMAL)
 	void loadDroneNormal() throws InterruptedException {
 		dronesService.loadDrone(droneMedication1);
-		Thread.sleep(2000);
+		Thread.sleep(2500);
 		List<EventLog> logs = logRepo.findAll();
+		//1-log (method loadDrone) + 11 (Full cycle of delivering and returning) + 11 (full cycle of battery charging)
 		assertEquals(23, logs.size());
 		State[] statesChain = getStatesChail();
 		
 		assertStates(statesChain, logs);
 		Drone drone = droneRepo.findById(DRONE1).orElseThrow();
 		assertEquals(State.IDLE, drone.getState());
+		assertEquals(100, drone.getBatteryCapacity());
 	}
 	private State[] getStatesChail() {
 		State [] stateValues = State.values();
@@ -67,10 +69,7 @@ class DronesServiceTest {
 	}
 	private void assertStates(State[] statesChain, List<EventLog> logs) {
 		final int[] indexValues = {0};
-		logs.forEach(l -> {
-			assertEquals(statesChain[indexValues[0]++], l.getState());
-		});
-		
+		logs.forEach(l -> assertEquals(statesChain[indexValues[0]++], l.getState()));
 	}
 	@Test
 	@Sql(scripts = "classpath:test_data.sql")
