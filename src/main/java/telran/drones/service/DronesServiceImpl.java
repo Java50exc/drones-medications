@@ -184,6 +184,9 @@ droneRepo.findByStateAndBatteryCapacityGreaterThanEqual(State.IDLE, capacityThre
 
 	@Override
 	public List<EventLogDto> checkHistoryLogs(String droneNumber) {
+		if(!droneRepo.existsById(droneNumber)) {
+			throw new DroneNotFoundException();
+		}
 		List<EventLog> logs = logRepo.findByDroneNumber(droneNumber);
 		log.debug("drone {} has {} logs", droneNumber, logs.size());
 		return logs.stream().map(EventLog::build).toList();
