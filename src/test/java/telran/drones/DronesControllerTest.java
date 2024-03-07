@@ -1,4 +1,4 @@
-package telran.cars;
+package telran.drones;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -27,7 +27,7 @@ import static telran.drones.api.ValidationConstants.*;
 
 import java.util.Arrays;
 
-@WebMvcTest(DronesController.class)
+@WebMvcTest
 class DronesControllerTest {
 	@MockBean
 	DronesService dronesService;
@@ -43,10 +43,6 @@ class DronesControllerTest {
 	private static final String WRONG_DRONE_NUMBER = DRONE_NUMBER.repeat(100);
 	private static final String MEDICATION_CODE = "AAA_55";
 	private static final String WRONG_MEDICATION_CODE = "aaaAAA";
-	
-	
-	
-	
 	
 	private static final DroneDto droneDto = new DroneDto(DRONE_NUMBER, ModelType.Lightweight);
 	private static final DroneDto droneDtoWrongNumber = new DroneDto(WRONG_DRONE_NUMBER, ModelType.Lightweight);
