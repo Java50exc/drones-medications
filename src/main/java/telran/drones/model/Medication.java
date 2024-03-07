@@ -1,5 +1,23 @@
 package telran.drones.model;
-//TODO create entity Medication
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name="medications")
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Medication {
+	@Column(name="medication_name")
+	String medicationName;
+	
+	int weight;
+	
+	@Id
+	@Column(name="medication_code")
+	String medicationCode;
+	
+	
+	
 
 }
