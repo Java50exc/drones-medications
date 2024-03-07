@@ -1,0 +1,7 @@
+/DroneAlreadyExistException.class
+/DroneNotFoundException.class
+/IllegalDroneStateException.class
+/IllegalMedicationWeightException.class
+/LowBatteryCapacityException.class
+/MedicationNotFoundException.class
+/ModelNotFoundException.class
