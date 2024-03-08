@@ -2,11 +2,14 @@ package telran.drones.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import telran.drones.dto.State;
 @Entity
 @Table(name="event_logs")
 @NoArgsConstructor
+@Getter
+@ToString
+@EqualsAndHashCode(of = {"droneNumber", "state", "batteryCapacity"})
 public class EventLog {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

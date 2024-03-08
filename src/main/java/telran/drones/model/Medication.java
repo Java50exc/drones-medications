@@ -7,6 +7,7 @@ import lombok.*;
 @Table(name="medications")
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public class Medication {
 	@Column(name="medication_name")
 	String medicationName;
