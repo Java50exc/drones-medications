@@ -15,17 +15,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import telran.drones.controller.DronesController;
-import telran.drones.dto.DroneDto;
-import telran.drones.dto.DroneMedication;
-import telran.drones.dto.ModelType;
+import telran.drones.dto.*;
 import telran.exceptions.NotFoundException;
+import telran.exceptions.controller.DronesExceptionsController;
 import telran.drones.service.DronesService;
 
 import static telran.drones.api.ServiceExceptionMessages.*;
 import static telran.drones.api.ValidationConstants.*;
 
 import java.util.Arrays;
+import java.util.List;
 
 @WebMvcTest
 class DronesControllerTest {
@@ -35,6 +34,8 @@ class DronesControllerTest {
 	MockMvc mockMvc;
 	@Autowired
 	ObjectMapper mapper;
+	
+	public record DroneWrongDto(String droneNumber, String droneType) {}
 	
 	private static final String REGISTER_DRONE_PATH = "http://localhost:8080/drones";
 	private static final String LOAD_DRONE_PATH = "http://localhost:8080/drones/load";
@@ -47,14 +48,17 @@ class DronesControllerTest {
 	private static final DroneDto droneDto = new DroneDto(DRONE_NUMBER, ModelType.Lightweight);
 	private static final DroneDto droneDtoWrongNumber = new DroneDto(WRONG_DRONE_NUMBER, ModelType.Lightweight);
 	private static final DroneDto droneDtoMissingAllFields = new DroneDto(null, null);
+	private static final DroneWrongDto droneDtoWrongAllFields = new DroneWrongDto(WRONG_DRONE_NUMBER, "Light");
 	
 	private static final DroneMedication droneMedication = new DroneMedication(DRONE_NUMBER, MEDICATION_CODE);
 	private static final DroneMedication droneMedicationWrongNumber = new DroneMedication(WRONG_DRONE_NUMBER, MEDICATION_CODE);
 	private static final DroneMedication droneMedicationWrongCode = new DroneMedication(DRONE_NUMBER, WRONG_MEDICATION_CODE);
 	private static final DroneMedication droneMedicationMissingAllFields = new DroneMedication(null, null);
 	
-	private static String[] droneDtoAllMessages = { MISSING_DRONE_NUMBER_MESSAGE, MISSING_MODEL_TYPE_MESSAGE };
-	private static String[] droneMedicationAllMessages = { MISSING_DRONE_NUMBER_MESSAGE, MISSING_MEDICATION_CODE_MESSAGE };
+	private static String[] droneDtoAllMissingMessages = { MISSING_DRONE_NUMBER_MESSAGE, MISSING_MODEL_TYPE_MESSAGE };
+	private static String[] droneDtoAllWrongMessages = { ILLEGAL_DRONE_NUMBER_LENGTH_MESSAGE, DronesExceptionsController.JSON_TYPE_MISMATCH_MESSAGE };
+	
+	private static String[] droneMedicationAllMissingMessages = { MISSING_DRONE_NUMBER_MESSAGE, MISSING_MEDICATION_CODE_MESSAGE };
 	
 
 	
@@ -79,6 +83,16 @@ class DronesControllerTest {
 		
 		assertEquals(droneMedicationJson, actualJson);	
 	}
+	
+	@Test 
+	void checkMedicationItems_newDrone_success() throws Exception {
+		when(dronesService.checkMedicationItems(DRONE_NUMBER)).thenReturn(List.of());
+		
+		String listJson = mapper.writeValueAsString(List.of());
+		
+		
+	}
+//	public List<String> checkMedicationItems(String droneNumber)
 	
 	//handling service exceptions
 	
@@ -179,14 +193,20 @@ class DronesControllerTest {
 	
 	@Test 
 	void registerDrone_missingAllFields_throwsException() {
-		Arrays.sort(droneDtoAllMessages);
-		testDtoValidation(droneDtoMissingAllFields, REGISTER_DRONE_PATH, String.join(";", droneDtoAllMessages));
+		Arrays.sort(droneDtoAllMissingMessages);
+		testDtoValidation(droneDtoMissingAllFields, REGISTER_DRONE_PATH, String.join(";", droneDtoAllMissingMessages));
+	}
+	
+	@Test 
+	void registerDrone_wrongAllFields_throwsException() {
+		Arrays.sort(droneDtoAllWrongMessages);
+		testDtoValidation(droneDtoWrongAllFields, REGISTER_DRONE_PATH, String.join(";", droneDtoAllWrongMessages));
 	}
 	
 	@Test 
 	void loadDrone_missingAllFields_throwsException() {
-		Arrays.sort(droneMedicationAllMessages);
-		testDtoValidation(droneMedicationMissingAllFields, LOAD_DRONE_PATH, String.join(";", droneMedicationAllMessages));
+		Arrays.sort(droneMedicationAllMissingMessages);
+		testDtoValidation(droneMedicationMissingAllFields, LOAD_DRONE_PATH, String.join(";", droneMedicationAllMissingMessages));
 	}
 	
 	

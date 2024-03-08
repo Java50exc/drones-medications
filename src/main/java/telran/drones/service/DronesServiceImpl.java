@@ -1,6 +1,7 @@
 package telran.drones.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -87,6 +88,39 @@ public class DronesServiceImpl implements DronesService {
 			log.error("checkDroneAvailability: state of drone {} is not IDLE", drone);
 			throw new DroneStateIllegalStateException();
 		}
+	}
+
+
+	   /**
+	    * checking loaded medication items for a given drone; 
+	    * @param droneNumber
+	    * @return list of medication codes that have been loaded on a given drone (for all time)
+	    */
+	@Override
+	public List<String> checkMedicationItems(String droneNumber) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public List<String> checkAvailableDrones() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public int checkBatteryCapacity(String droneNumber) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public DroneItemsAmount checkDroneLoadedItemAmounts() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
