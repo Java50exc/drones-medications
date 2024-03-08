@@ -19,7 +19,7 @@ import telran.drones.controller.DronesController;
 import telran.drones.dto.DroneDto;
 import telran.drones.dto.DroneMedication;
 import telran.drones.dto.ModelType;
-import telran.drones.exceptions.NotFoundException;
+import telran.exceptions.NotFoundException;
 import telran.drones.service.DronesService;
 
 import static telran.drones.api.ServiceExceptionMessages.*;
