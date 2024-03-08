@@ -21,6 +21,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 class DronesServiceTest {
 	private static final String DRONE1 = "Drone-1";
+	private static final String DRONE2 = "Drone-2";
 	private static final String MED1 = "MED_1";
 	private static final String DRONE3 = "Drone-3";
 	private static final String SERVICE_TEST = "Service: ";
@@ -82,5 +83,43 @@ class DronesServiceTest {
 		assertThrowsExactly(DroneAlreadyExistException.class,
 				() -> dronesService.registerDrone(drone1));
 	}
+	
+	@Test
+	void checkMedicationItemsNormal() {
+		dronesService.loadDrone(droneMedication1);
+		assertEquals(List.of(MED1), dronesService.checkMedicationItems(DRONE1));
+	}
+	
+	@Test
+	void checkMedicationItemsDroneNotFound() {
+		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkMedicationItems(DRONE4));
+	}
+	
+	@Test
+	void checkAvailableDronesNormal() {
+		assertEquals(List.of(DRONE1, DRONE2), dronesService.checkAvailableDrones());
+	}
+	
+	@Test
+	void checkBatteryCapacityDroneNotFound() {
+		assertThrowsExactly(DroneNotFoundException.class, () -> dronesService.checkBatteryCapacity(DRONE4));
+	}
+	
+	@Test
+	void checkBatteryCapacityDrone() {
+		assertEquals(100, dronesService.checkBatteryCapacity(DRONE1));
+	}
+	
+	@Test
+	void droneItemsAmount() {
+		dronesService.loadDrone(droneMedication1);
+		List<String> expected = List.of("Drone-11", "Drone-20", "Drone-30");
+		List<String> actual = dronesService.checkDroneLoadedItemAmounts().stream().map(e -> e.getNumber().toString() + e.getAmount()).toList();
+		assertEquals(expected, actual);
+	}
+
+
+
+
 	
 }

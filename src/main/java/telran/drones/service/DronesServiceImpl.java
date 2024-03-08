@@ -84,27 +84,31 @@ public class DronesServiceImpl implements DronesService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<String> checkMedicationItems(String droneNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!droneRepo.existsById(droneNumber)) {
+			throw new DroneNotFoundException();
+		}
+		
+		return logRepo.findMedicationsByDroneNumber(droneNumber);
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<String> checkAvailableDrones() {
-		// TODO Auto-generated method stub
-		return null;
+		return droneRepo.findDronesByState(State.IDLE);
 	}
 
 	@Override
 	public int checkBatteryCapacity(String droneNumber) {
-		// TODO Auto-generated method stub
-		return 0;
+		Drone drone = droneRepo.findById(droneNumber).orElseThrow(DroneNotFoundException::new);
+		return drone.getBatteryCapacity();
 	}
 
 	@Override
-	public DroneItemsAmount checkDroneLoadedItemAmounts() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<DroneItemsAmount> checkDroneLoadedItemAmounts() {
+		
+		return droneRepo.findDroneItemsAmount();
 	}
 
 }

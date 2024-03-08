@@ -2,11 +2,16 @@ package telran.drones;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static telran.drones.api.DronesValidationErrorMessages.DRONE_NUMBER_WRONG_LENGTH;
+import static telran.drones.api.DronesValidationErrorMessages.MAX_DRONE_NUMBER_LENGTH;
+import static telran.drones.api.DronesValidationErrorMessages.MISSING_DRONE_NUMBER;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,17 +23,22 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import telran.drones.api.DronesValidationErrorMessages;
 import telran.drones.api.ServiceExceptionMessages;
 import telran.drones.api.UrlConstants;
 import telran.drones.dto.*;
 import telran.drones.exceptions.*;
+import telran.exceptions.NotFoundException;
 import telran.exceptions.controller.DronesExceptionsController;
 import telran.drones.service.DronesService;
 
 record DroneDtoWrongEnum(String number, String modelType) {
 
 }
+
+record DroneItemsAmountDto (String number, int amount) {}
 @WebMvcTest
 class DronesControllerTest {
 	@Autowired
@@ -42,6 +52,10 @@ class DronesControllerTest {
 	private static final String MEDICATION_CODE = "MED_1";
 	static final String URL_DRONE_REGISTER = HOST + UrlConstants.DRONES;
 	private static final String URL_DRONE_LOAD = HOST + UrlConstants.LOAD_DRONE;
+	private static final String URL_CHECK_DRONE_MED = HOST + UrlConstants.CHECK_MEDICATION_ITEMS;
+	private static final String URL_CHECK_AVAILABLE_DRONES = HOST + UrlConstants.CHECK_AVAILABLE_DRONES;
+	private static final String URL_CHECK_BATTERY_CAPACITY = HOST + UrlConstants.CHECK_BATTERY_CAPACITY;
+	private static final String URL_CHECK_ITEMS_AMOUNT = HOST + UrlConstants.CHECK_DRONE_LOADED_ITEM_AMOUNTS;
 	private static final String CONTROLLER_TEST = "Controller:";
 	DroneDto droneDto1 = new DroneDto(DRONE_NUMBER_1, ModelType.Cruiserweight);
 	DroneDtoWrongEnum droneDtoWrongFields = new DroneDtoWrongEnum(DRONE_NUMBER_1, "KUKU");
@@ -60,6 +74,14 @@ class DronesControllerTest {
 			DronesValidationErrorMessages.MISSING_DRONE_NUMBER,
 			DronesValidationErrorMessages.MISSING_MEDICATION_CODE,
 	};
+	
+	List<DroneItemsAmount> itemsAmount = List.of(new DroneItemsAmount() {
+		@Override
+		public String getNumber() { return DRONE_NUMBER_1; }
+		@Override
+		public long getAmount() { return 1; }
+	});
+	
 	@Test
 	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_NORMAL)
 		void testDroneRegisterNormal() throws Exception{
@@ -177,4 +199,81 @@ class DronesControllerTest {
 				.andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
 		assertErrorMessages(response, errorMessages);
 	}
+//	
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_MED_ITEMS_NORMAL)
+	void checkMedicationItemsNormal() throws Exception{
+		when(dronesService.checkMedicationItems(DRONE_NUMBER_1)).thenReturn(List.of(MEDICATION_CODE));
+		String listJson = mapper.writeValueAsString(List.of(MEDICATION_CODE));
+		System.out.println(URL_CHECK_DRONE_MED + DRONE_NUMBER_1);
+		String response = mockMvc.perform(get(URL_CHECK_DRONE_MED + DRONE_NUMBER_1)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(listJson, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_MED_ITEMS_DRONE_NOT_FOUND)
+	void checkMedicationItemsDroneNotExists() throws Exception{
+		when(dronesService.checkMedicationItems(DRONE_NUMBER_1)).thenThrow(new NotFoundException(ServiceExceptionMessages.DRONE_NOT_FOUND));
+		
+		String response = mockMvc.perform(get(URL_CHECK_DRONE_MED + DRONE_NUMBER_1)).andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
+		assertEquals(ServiceExceptionMessages.DRONE_NOT_FOUND, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_PATH_VARIABLE_VALIDATION_VIOLATION)
+	void checkMedicationItemsWrongNumber() throws Exception{
+		String response = mockMvc.perform(get(URL_CHECK_DRONE_MED + new String(new char[1000]))).andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertEquals(DronesValidationErrorMessages.DRONE_NUMBER_WRONG_LENGTH, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.AVAILABLE_DRONES)
+	void checkAvailableDronesNormal() throws Exception{
+		when(dronesService.checkAvailableDrones()).thenReturn(List.of(DRONE_NUMBER_1));
+		String listJson = mapper.writeValueAsString(List.of(DRONE_NUMBER_1));
+		String response = mockMvc.perform(get(URL_CHECK_AVAILABLE_DRONES)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(listJson, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_NORMAL)
+	void checkBatteryCapacityNormal() throws Exception{
+		when(dronesService.checkBatteryCapacity(DRONE_NUMBER_1)).thenReturn(100);
+		String batteryJson = mapper.writeValueAsString(100);
+		String response = mockMvc.perform(get(URL_CHECK_BATTERY_CAPACITY + DRONE_NUMBER_1)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(batteryJson, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_BATTERY_LEVEL_DRONE_NOT_FOUND)
+	void checkBatteryCapacityDroneNotFound() throws Exception{
+		when(dronesService.checkBatteryCapacity(DRONE_NUMBER_1)).thenThrow(new NotFoundException(ServiceExceptionMessages.DRONE_NOT_FOUND));
+		
+		String response = mockMvc.perform(get(URL_CHECK_BATTERY_CAPACITY + DRONE_NUMBER_1)).andExpect(status().isNotFound()).andReturn().getResponse().getContentAsString();
+		assertEquals(ServiceExceptionMessages.DRONE_NOT_FOUND, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.REGISTER_DRONE_PATH_VARIABLE_VALIDATION_VIOLATION)
+	void checkBatteryCapacityWrongNumber() throws Exception{		
+		String response = mockMvc.perform(get(URL_CHECK_BATTERY_CAPACITY + new String(new char[1000]))).andExpect(status().isBadRequest()).andReturn().getResponse().getContentAsString();
+		assertEquals(DronesValidationErrorMessages.DRONE_NUMBER_WRONG_LENGTH, response);
+	}
+	
+	@Test
+	@DisplayName(CONTROLLER_TEST + TestDisplayNames.CHECK_DRONES_ITEMS_AMOUNT)
+	void checkDroneLoadedItemAmounts() throws Exception{	
+		when(dronesService.checkDroneLoadedItemAmounts()).thenReturn(itemsAmount);
+		String itemsAmountJson = mapper.writeValueAsString(itemsAmount);
+		String response = mockMvc.perform(get(URL_CHECK_ITEMS_AMOUNT)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+		assertEquals(itemsAmountJson, response);
+	}
+	
+	
+	
+	
+
+	
+	
 }
