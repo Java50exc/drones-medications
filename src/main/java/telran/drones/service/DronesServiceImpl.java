@@ -67,13 +67,8 @@ public class DronesServiceImpl implements DronesService {
 		
 		drone.setState(State.LOADING);
 		log.debug("loadDrone: drone {} changed state to LOADING", drone);
-		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(), drone.getBatteryCapacity());
-		eventLogRepo.save(eventLog);
-		log.trace("loadDrone: event log created {}", eventLog);
-		//FIXME some loading operations
-		drone.setState(State.LOADED);
-		log.debug("loadDrone: drone {} changed state to LOADED", drone);
-		eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(), drone.getBatteryCapacity());
+		
+		EventLog eventLog = new EventLog(LocalDateTime.now(), drone.getNumber(), drone.getState(), drone.getBatteryCapacity(), medication.getMedicationCode());
 		eventLogRepo.save(eventLog);
 		log.trace("loadDrone: event log created {}", eventLog);
 		return droneMedication;

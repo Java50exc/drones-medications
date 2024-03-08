@@ -2,14 +2,15 @@ package telran.drones.model;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import telran.drones.dto.State;
 @Entity
 @Table(name="event_logs")
 @NoArgsConstructor
-@Getter
 @ToString
-@EqualsAndHashCode(of = {"droneNumber", "state", "batteryCapacity"})
+@Getter
 public class EventLog {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,15 +19,19 @@ public class EventLog {
 	LocalDateTime timestamp;
 	@Column(name="drone_number")
 	String droneNumber;
+	@Column(name="medication_code")
+	String medicationCode;
 	@Enumerated(EnumType.STRING)
 	State state;
 	@Column(name="battery_capacity")
 	int batteryCapacity;
-	public EventLog(LocalDateTime timestamp, String droneNumber, State state, int batteryCapacity) {
+	public EventLog(LocalDateTime timestamp, String droneNumber, State state, int batteryCapacity,
+			String medicationCode) {
 		this.timestamp = timestamp;
 		this.droneNumber = droneNumber;
 		this.state = state;
 		this.batteryCapacity = batteryCapacity;
+		this.medicationCode = medicationCode;
 	}
 	
 }
